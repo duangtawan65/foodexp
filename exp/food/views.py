@@ -51,6 +51,24 @@ def add_food_item(request):
             return JsonResponse({'success': False, 'error': 'Category does not exist'})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
+def edit_food_item(request):
+    if request.method == 'POST':
+        food_id = request.POST.get('id')
+        name = request.POST.get('name')
+        category_id = request.POST.get('category')
+        expiry_date = request.POST.get('expiry_date')
+        try:
+            food_item = FoodItem.objects.get(id=food_id)
+            food_item.name = name
+            food_item.category = Category.objects.get(id=category_id)
+            food_item.expiry_date = expiry_date
+            food_item.save()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+
 # ฟังก์ชันลบ Food Item
 def delete_food_item(request, pk):
     try:

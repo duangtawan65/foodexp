@@ -13,6 +13,11 @@
     <div class="bg-blue-600 text-white py-4 text-center shadow-md">
         <h1 class="text-3xl font-bold">Manage Food Items</h1>
     </div>
+    <div class="flex justify-self-start mt-6">
+            <a href="{% url 'home' %}" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md justify-end">
+                Back to Home
+            </a>
+    </div>
 
     <!-- Food Items Table -->
     <div class="container mx-auto mt-8 px-6">
@@ -35,6 +40,10 @@
                         <td class="px-4 py-2">{{ item.category.name }}</td>
                         <td class="px-4 py-2">{{ item.expiry_date }}</td>
                         <td class="px-4 py-2">
+                             <button onclick="editItem({{ item.id }}, '{{ item.name }}', '{{ item.category.id }}', '{{ item.expiry_date }}')"
+                                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded">
+                                Edit
+                            </button>
                             <button onclick="deleteItem({{ item.id }})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
                                 Delete
                             </button>
@@ -93,6 +102,41 @@
             <button id="closeFoodModal" class="text-red-500 mt-2">Close</button>
         </div>
     </div>
+    <!-- Add Modals -->
+    <div id="categoryModal" class="hidden fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+        <!-- Add Category Modal Content -->
+    </div>
+
+    <div id="foodModal" class="hidden fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+        <!-- Add Food Item Modal Content -->
+    </div>
+
+    <!-- Edit Food Item Modal -->
+    <div id="editFoodModal" class="hidden fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+        <div class="bg-white p-6 rounded-lg shadow-md w-96">
+            <h3 class="text-xl font-semibold mb-4">Edit Food Item</h3>
+            <form id="editFoodItemForm">
+                {% csrf_token %}
+                <input type="hidden" id="editFoodId" name="id">
+
+                <label class="block mb-2 text-gray-700">Food Name:</label>
+                <input type="text" id="editFoodName" name="name" class="w-full px-3 py-2 border rounded-lg mb-4" required>
+
+                <label class="block mb-2 text-gray-700">Category:</label>
+                <select id="editFoodCategory" name="category" class="w-full px-3 py-2 border rounded-lg mb-4">
+                    {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <label class="block mb-2 text-gray-700">Expiry Date:</label>
+                <input type="date" id="editFoodExpiryDate" name="expiry_date" class="w-full px-3 py-2 border rounded-lg mb-4" required>
+
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Save Changes</button>
+            </form>
+            <button id="closeEditFoodModal" class="text-red-500 mt-2">Close</button>
+        </div>
+    </div>
 
     <!-- JavaScript -->
     <script>
@@ -142,6 +186,32 @@
             }).then(response => response.json())
               .then(data => { if (data.success) location.reload(); });
         }
+
+        const editFoodModal = document.getElementById('editFoodModal');
+        document.getElementById('closeEditFoodModal').onclick = () => editFoodModal.classList.add('hidden');
+
+        // Populate Modal with Existing Data
+        function editItem(id, name, category, expiry_date) {
+            document.getElementById('editFoodId').value = id;
+            document.getElementById('editFoodName').value = name;
+            document.getElementById('editFoodCategory').value = category;
+            document.getElementById('editFoodExpiryDate').value = expiry_date;
+            editFoodModal.classList.remove('hidden');
+        }
+
+        // Submit Edit Form
+        document.getElementById('editFoodItemForm').onsubmit = function(e) {
+            e.preventDefault();
+            fetch("{% url 'edit_food_item' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                body: new FormData(this)
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) location.reload();
+                  else alert('Failed to update food item');
+              });
+        };
     </script>
 </body>
 </html>
